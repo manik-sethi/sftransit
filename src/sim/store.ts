@@ -15,6 +15,8 @@ interface AppState {
   setFlyTo: (f: FlyTo | null) => void;
   night: boolean;
   toggleNight: () => void;
+  mode: 'live' | 'demo';
+  setMode: (mode: 'live' | 'demo') => void;
 }
 
 export const useApp = create<AppState>((set) => ({
@@ -28,4 +30,7 @@ export const useApp = create<AppState>((set) => ({
   setFlyTo: (f) => set({ flyTo: f, ...(f ? { followedId: null } : {}) }),
   night: false,
   toggleNight: () => set((s) => ({ night: !s.night })),
+  // 'live' = real 511.org feed via our proxy; 'demo' = the dummy simulator
+  mode: 'live' as 'live' | 'demo',
+  setMode: (mode: 'live' | 'demo') => set({ mode, followedId: null }),
 }));

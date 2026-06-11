@@ -221,6 +221,29 @@ body {
   opacity: 0.55;
 }
 
+.mode-btn {
+  margin-left: 8px;
+  border: 1.5px solid #ddc9a6;
+  background: #f6ecd9;
+  color: #6b5841;
+  border-radius: 8px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.mode-btn:hover {
+  background: #eddcbe;
+}
+
+.app.night .mode-btn {
+  background: #3a374e;
+  border-color: #565070;
+  color: #e8e2d0;
+}
+
 .night-btn {
   margin-left: 10px;
   border: 2px solid #ddc9a6;

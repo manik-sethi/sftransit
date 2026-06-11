@@ -2,7 +2,12 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { positionOf } from '../sim/transit';
+import { livePositionOf } from '../sim/live';
 import { useApp } from '../sim/store';
+
+function anyPositionOf(id: string, out: THREE.Vector3): boolean {
+  return id.startsWith('live:') ? livePositionOf(id.slice(5), out) : positionOf(id, out);
+}
 
 type ControlsLike = {
   target: THREE.Vector3;
@@ -36,7 +41,7 @@ export function CameraRig() {
     const cam = controls.object as THREE.PerspectiveCamera;
 
     if (followedId) {
-      if (!positionOf(followedId, vehiclePos.current)) return;
+      if (!anyPositionOf(followedId, vehiclePos.current)) return;
       offset.current.copy(cam.position).sub(controls.target);
       // ease in to a comfy chase distance while keeping the user's orbit angle
       const len = THREE.MathUtils.lerp(offset.current.length(), 26, 0.04);

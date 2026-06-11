@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SYSTEMS } from '../geo/systems';
 import { infoOf, VehicleInfo } from '../sim/transit';
+import { liveInfoOf, liveStatus, LiveInfo } from '../sim/live';
 import { useApp } from '../sim/store';
 import { getViewPresets } from './views';
 
@@ -63,20 +64,66 @@ function InfoCard() {
   const followedId = useApp((s) => s.followedId);
   const setFollowed = useApp((s) => s.setFollowed);
   const [info, setInfo] = useState<VehicleInfo | null>(null);
+  const [live, setLive] = useState<LiveInfo | null>(null);
 
   useEffect(() => {
     if (!followedId) {
       setInfo(null);
+      setLive(null);
       return;
     }
-    const update = () => setInfo(infoOf(followedId));
+    const update = () => {
+      if (followedId.startsWith('live:')) {
+        setLive(liveInfoOf(followedId.slice(5)));
+        setInfo(null);
+      } else {
+        setInfo(infoOf(followedId));
+        setLive(null);
+      }
+    };
     update();
     const t = setInterval(update, 250);
     return () => clearInterval(t);
   }, [followedId]);
 
+  const meta = sysMeta[(live ?? info)?.system ?? 'bus'];
+  if (live) {
+    return (
+      <div className="panel info-card">
+        <div className="info-head">
+          <span className="info-emoji">{meta.emoji}</span>
+          <span className="route-badge" style={{ background: meta.color }}>
+            {live.line}
+          </span>
+          <button className="close-btn" onClick={() => setFollowed(null)} title="Stop following">
+            ✕
+          </button>
+        </div>
+        <div className="info-body">
+          <div>
+            <div className="info-label">Vehicle</div>
+            <div className="info-value">#{live.ref}</div>
+          </div>
+          <div>
+            <div className="info-label">To</div>
+            <div className="info-value">{live.dest}</div>
+          </div>
+          {live.occ && (
+            <div>
+              <div className="info-label">Occupancy</div>
+              <div className="info-value">{live.occ}</div>
+            </div>
+          )}
+          <div>
+            <div className="info-label">Updated</div>
+            <div className="info-value">{live.ageSec < 5 ? 'just now' : `${live.ageSec}s ago`}</div>
+          </div>
+        </div>
+        <div className="info-hint">real 511 vehicle · click water or press ✕ to let go</div>
+      </div>
+    );
+  }
   if (!info) return null;
-  const meta = sysMeta[info.system];
   return (
     <div className="panel info-card">
       <div className="info-head">
@@ -107,12 +154,40 @@ function InfoCard() {
   );
 }
 
+function LiveStatusLine() {
+  const mode = useApp((s) => s.mode);
+  const setMode = useApp((s) => s.setMode);
+  const [, bump] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => bump((n) => n + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  let text: string;
+  if (mode === 'demo') {
+    text = 'simulated demo';
+  } else if (!liveStatus.everConnected) {
+    text = liveStatus.error ? `live feed: ${liveStatus.error}` : 'connecting to 511…';
+  } else {
+    const age = Math.round((Date.now() - liveStatus.lastUpdate) / 1000);
+    text = `${liveStatus.count} vehicles · 511 data · ${age < 5 ? 'just now' : `${age}s ago`}`;
+  }
+  return (
+    <div className="title-sub">
+      {text}
+      <button className="mode-btn" onClick={() => setMode(mode === 'live' ? 'demo' : 'live')}>
+        {mode === 'live' ? 'switch to demo' : 'go live'}
+      </button>
+    </div>
+  );
+}
+
 export function Hud() {
   return (
     <>
       <div className="panel title">
         <div className="title-main">🌉 SF Transit</div>
-        <div className="title-sub">live(ish) · simulated feed</div>
+        <LiveStatusLine />
       </div>
       <Clock />
       <Legend />

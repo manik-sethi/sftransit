@@ -6,8 +6,11 @@ import { Bridges } from './Bridges';
 import { RoadsLayer } from './RoadsLayer';
 import { RoutesLayer } from './RoutesLayer';
 import { Vehicles } from './Vehicles';
+import { LiveVehicles } from './LiveVehicles';
+import { useApp } from '../sim/store';
 
 export function CityScene() {
+  const mode = useApp((s) => s.mode);
   return (
     <group>
       <Terrain />
@@ -19,7 +22,7 @@ export function CityScene() {
       <Landmarks />
       <Bridges />
       <RoutesLayer />
-      <Vehicles />
+      {mode === 'live' ? <LiveVehicles /> : <Vehicles />}
     </group>
   );
 }

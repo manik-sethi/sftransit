@@ -12,7 +12,23 @@ npm install
 npm run dev   # serves on http://localhost:3000
 ```
 
-## Data
+## Live transit data
+
+The app shows **real vehicle positions** from the 511.org SIRI
+VehicleMonitoring API (Muni, BART, Golden Gate & SF Bay ferries), proxied
+through `api/vehicles.js` so the API token stays server-side:
+
+- Local dev: put `511_TOKEN=<your key>` in `.env` (gitignored). The Vite dev
+  server hosts the same proxy endpoint.
+- Vercel: set the `TRANSIT_511_TOKEN` env var in project settings. CDN
+  caching (`s-maxage`) collapses all visitors into ~one upstream request per
+  TTL per agency, keeping usage inside 511's 60 req/hr default quota.
+- Poll budget: Muni every 150s, BART every 240s, ferries every 15min, with
+  client-side position interpolation between updates.
+- No token / API down → the app automatically falls back to the built-in
+  demo simulator (toggle in the top-left panel).
+
+## Static geography data
 
 Static geography assets live in `public/data/` and are baked by
 `node scripts/fetch-data.mjs` (no API keys needed):
