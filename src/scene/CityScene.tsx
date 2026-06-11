@@ -1,6 +1,7 @@
 import { Terrain, Water } from './Terrain';
 import { Buildings } from './Buildings';
 import { Trees, Clouds } from './Greenery';
+import { EdgeClouds } from './EdgeClouds';
 import { Landmarks } from './Landmarks';
 import { Bridges } from './Bridges';
 import { RoadsLayer } from './RoadsLayer';
@@ -22,6 +23,7 @@ export function CityScene() {
       <Landmarks />
       <Bridges />
       <RoutesLayer />
+      <EdgeClouds />
       {mode === 'live' ? <LiveVehicles /> : <Vehicles />}
     </group>
   );

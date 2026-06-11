@@ -23,7 +23,7 @@ interface Spec {
 }
 
 const SPECS: Spec[] = [
-  { id: 'city', emoji: '🌁', label: 'Full city', lat: 37.768, lon: -122.435, dist: 280, heading: 0.5, pitch: 0.75 },
+  { id: 'city', emoji: '🌁', label: 'Full city', lat: 37.768, lon: -122.435, dist: 215, heading: 0.5, pitch: 0.75 },
   { id: 'downtown', emoji: '🏙️', label: 'Downtown', lat: 37.7925, lon: -122.401, dist: 34, heading: 0.9, pitch: 0.7 },
   { id: 'gg', emoji: '🌉', label: 'Golden Gate', lat: 37.8195, lon: -122.4785, dist: 38, heading: 1.9, pitch: 0.45 },
   { id: 'wharf', emoji: '🎡', label: 'Wharf & Bay', lat: 37.809, lon: -122.414, dist: 30, heading: -0.2, pitch: 0.55 },

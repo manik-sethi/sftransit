@@ -95,16 +95,94 @@ export function Landmarks() {
           </group>
         ))}
       </At>
-      {/* Oracle Park */}
+      {/* Oracle Park: brick bowl, green diamond, light towers, scoreboard */}
       <At lat={37.7786} lon={-122.3893} yaw={0.8}>
-        <mesh castShadow position-y={0.45}>
-          <cylinderGeometry args={[2.2, 2.4, 0.9, 14, 1, true]} />
-          <meshStandardMaterial color="#e0c9ab" flatShading side={2} />
+        <mesh castShadow position-y={0.5}>
+          <cylinderGeometry args={[2.1, 2.5, 1, 16, 1, true]} />
+          <meshStandardMaterial color="#b3705a" flatShading side={2} />
         </mesh>
-        <mesh position-y={0.06} rotation-x={-Math.PI / 2}>
-          <circleGeometry args={[2.1, 14]} />
-          <meshStandardMaterial color={PAL.park} />
+        <mesh position-y={1.02} rotation-x={-Math.PI / 2}>
+          <torusGeometry args={[2.12, 0.1, 6, 16]} />
+          <meshStandardMaterial color="#e8dcc0" flatShading />
         </mesh>
+        <mesh position-y={0.08} rotation-x={-Math.PI / 2}>
+          <circleGeometry args={[2.0, 16]} />
+          <meshStandardMaterial color="#8fae72" />
+        </mesh>
+        <mesh position={[0, 0.09, -0.4]} rotation-x={-Math.PI / 2} rotation-z={Math.PI / 4}>
+          <planeGeometry args={[1.1, 1.1]} />
+          <meshStandardMaterial color="#d9c49a" />
+        </mesh>
+        {[[-1.7, -1.4], [1.7, -1.4], [-1.9, 1.2], [1.9, 1.2]].map(([lx, lz], i) => (
+          <group key={i} position={[lx, 0, lz]}>
+            <mesh castShadow position-y={1.1}>
+              <cylinderGeometry args={[0.05, 0.07, 2.2, 5]} />
+              <meshStandardMaterial color="#6b5841" />
+            </mesh>
+            <mesh position-y={2.25}>
+              <boxGeometry args={[0.45, 0.18, 0.08]} />
+              <meshStandardMaterial color="#fbf6ec" emissive="#fff2c8" emissiveIntensity={0.5} />
+            </mesh>
+          </group>
+        ))}
+        <mesh castShadow position={[0, 1.25, 2.1]}>
+          <boxGeometry args={[1.4, 0.5, 0.15]} />
+          <meshStandardMaterial color="#5a4a3a" flatShading />
+        </mesh>
+      </At>
+      {/* Palace of Fine Arts: terracotta rotunda + colonnade + lagoon */}
+      <At lat={37.8021} lon={-122.4486}>
+        <mesh position={[1.6, 0.03, 0.4]} rotation-x={-Math.PI / 2}>
+          <circleGeometry args={[1.5, 12]} />
+          <meshStandardMaterial color="#9ec7c2" />
+        </mesh>
+        {Array.from({ length: 8 }, (_, i) => {
+          const a = (i / 8) * Math.PI * 2;
+          return (
+            <mesh key={i} castShadow position={[Math.cos(a) * 0.85, 0.55, Math.sin(a) * 0.85]}>
+              <cylinderGeometry args={[0.09, 0.11, 1.1, 6]} />
+              <meshStandardMaterial color="#e8d9bd" flatShading />
+            </mesh>
+          );
+        })}
+        <mesh castShadow position-y={1.25}>
+          <sphereGeometry args={[1.05, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2]} />
+          <meshStandardMaterial color="#c9886a" flatShading />
+        </mesh>
+        {[-1, 1].map((s) => (
+          <mesh key={s} castShadow position={[-1.6 * s, 0.4, -1.1 * s * 0.4]} rotation-y={0.4 * s}>
+            <boxGeometry args={[1.3, 0.8, 0.3]} />
+            <meshStandardMaterial color="#e8d9bd" flatShading />
+          </mesh>
+        ))}
+      </At>
+      {/* de Young: copper slab + twisting tower */}
+      <At lat={37.7714} lon={-122.4688} yaw={0.25}>
+        <mesh castShadow position-y={0.3}>
+          <boxGeometry args={[2.6, 0.6, 1]} />
+          <meshStandardMaterial color="#a8765c" flatShading roughness={0.6} />
+        </mesh>
+        {[0, 1, 2, 3].map((i) => (
+          <mesh key={i} castShadow position={[1.6, 0.3 + i * 0.55, 0]} rotation-y={i * 0.22}>
+            <boxGeometry args={[0.55, 0.55, 0.55]} />
+            <meshStandardMaterial color="#a8765c" flatShading roughness={0.6} />
+          </mesh>
+        ))}
+      </At>
+      {/* Fillmore St marina bars: tiny storefronts with awnings */}
+      <At lat={37.8} lon={-122.436} yaw={Math.PI / 2}>
+        {['#d97b6c', '#6fa8a0', '#d9a13c', '#a58ac2', '#7faa5e', '#c98a4b'].map((color, i) => (
+          <group key={i} position={[i * 0.42 - 1.05, 0, 0]}>
+            <mesh castShadow position-y={0.22}>
+              <boxGeometry args={[0.36, 0.44, 0.4]} />
+              <meshStandardMaterial color="#f2e6d0" flatShading />
+            </mesh>
+            <mesh position={[0, 0.34, 0.26]} rotation-x={0.5}>
+              <boxGeometry args={[0.34, 0.02, 0.18]} />
+              <meshStandardMaterial color={color} flatShading />
+            </mesh>
+          </group>
+        ))}
       </At>
       {/* Alcatraz cellhouse */}
       <At lat={37.8267} lon={-122.423}>

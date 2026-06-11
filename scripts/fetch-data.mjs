@@ -12,7 +12,11 @@ const OUT = path.join(import.meta.dirname, '..', 'public', 'data');
 fs.mkdirSync(OUT, { recursive: true });
 
 // ——— geography ———
-const BBOX = { s: 37.7, w: -122.53, n: 37.87, e: -122.28 };
+// SF proper plus its bridge stubs: Marin/East Bay land is cut so bridges
+// run off into cloud banks at the map edges.
+const BBOX = { s: 37.703, w: -122.52, n: 37.84, e: -122.34 };
+/** land here is forced to water so only SF city renders (Marin headlands) */
+const isCutLand = (lat, lon) => lat > 37.8125 && lon < -122.45;
 const LAT0 = (BBOX.s + BBOX.n) / 2;
 const LON0 = (BBOX.w + BBOX.e) / 2;
 const M_LAT = 111320;
@@ -138,7 +142,8 @@ async function buildElevation() {
     const lat = BBOX.n - ((j + 0.5) / GH) * (BBOX.n - BBOX.s);
     for (let i = 0; i < GW; i++) {
       const lon = BBOX.w + ((i + 0.5) / GW) * (BBOX.e - BBOX.w);
-      grid[j * GW + i] = Math.round(sample(lat, lon) * 4); // quarter-meter units
+      const h = isCutLand(lat, lon) ? -20 : sample(lat, lon);
+      grid[j * GW + i] = Math.round(h * 4); // quarter-meter units
     }
   }
   fs.writeFileSync(path.join(OUT, 'terrain.bin'), Buffer.from(grid.buffer));
@@ -165,6 +170,10 @@ out geom;`;
   let pts = 0;
   for (const el of data.elements) {
     if (el.type !== 'way' || !el.geometry) continue;
+    // drop roads on cut land (Marin) — except ways that mostly span real
+    // water (the GG bridge itself), which get lifted onto the deck later
+    const cut = el.geometry.filter((g) => isCutLand(g.lat, g.lon)).length;
+    if (cut > el.geometry.length * 0.5) continue;
     const line = decimate(
       el.geometry.map((g) => toXZ(g.lat, g.lon)),
       0.5,
@@ -232,6 +241,15 @@ async function buildGreen(GW2, GH2) {
 out geom;`;
   const data = await overpass(q);
   const polys = [];
+  // hand-patched parks OSM tagging misses or fragments (lat/lon rects)
+  const HAND_PARKS = [
+    [37.806, 37.8077, -122.4475, -122.4405], // Marina Green
+    [37.8025, 37.8062, -122.4655, -122.448], // Crissy Field
+    [37.8048, 37.8068, -122.4278, -122.4238], // Fort Mason lawn
+  ];
+  for (const [s, n, w, e] of HAND_PARKS) {
+    polys.push([toXZ(s, w), toXZ(s, e), toXZ(n, e), toXZ(n, w), toXZ(s, w)]);
+  }
   for (const el of data.elements) {
     if (el.type === 'way' && el.geometry && el.geometry.length >= 4) {
       polys.push(el.geometry.map((g) => toXZ(g.lat, g.lon)));
@@ -342,9 +360,9 @@ const BUS_STOP_OVERRIDES = Object.fromEntries(BUS_FALLBACKS.map((b) => [b.id.rep
 const LINES = [
   {
     id: 'ggt', system: 'bus', name: 'GGT · Golden Gate', speed: 2.4, vehicles: 2,
-    match: (t) => t.route === 'bus' && /Golden Gate/i.test(t.operator || '') && /Sausalito|Marin/i.test(t.name || ''),
-    hand: [[37.7997, -122.436], [37.7999, -122.4464], [37.8035, -122.4577], [37.807, -122.472], [37.8077, -122.475], [37.8105, -122.4773], [37.832, -122.479], [37.8385, -122.4805], [37.8455, -122.4818], [37.852, -122.4794], [37.8557, -122.478]],
-    stops: [[37.7997, -122.436, 'Marina'], [37.8077, -122.475, 'Toll Plaza'], [37.8214, -122.4785, 'Golden Gate Bridge'], [37.8557, -122.478, 'Sausalito']],
+    match: () => false,
+    hand: [[37.7997, -122.436], [37.7999, -122.4464], [37.8035, -122.4577], [37.807, -122.472], [37.8077, -122.475], [37.8105, -122.4773], [37.825, -122.4787], [37.833, -122.4793]],
+    stops: [[37.7997, -122.436, 'Marina'], [37.8077, -122.475, 'Toll Plaza'], [37.8214, -122.4785, 'Golden Gate Bridge'], [37.833, -122.4793, 'Marin · into the clouds']],
   },
   {
     id: 'metroN', system: 'metro', name: 'N Judah', speed: 2.5, vehicles: 4, cars: 2,
@@ -384,15 +402,15 @@ const LINES = [
   },
   {
     id: 'ferrySaus', system: 'ferry', name: 'Sausalito Ferry', speed: 1.6, vehicles: 2,
-    match: (t) => t.route === 'ferry' && /Sausalito/i.test(t.name || ''),
-    hand: [[37.7955, -122.3937], [37.81, -122.41], [37.823, -122.435], [37.84, -122.46], [37.8531, -122.4737], [37.8557, -122.478]],
-    stops: [[37.7955, -122.3937, 'Ferry Building'], [37.823, -122.435, 'Alcatraz (passing)'], [37.8557, -122.478, 'Sausalito']],
+    match: () => false,
+    hand: [[37.7955, -122.3937], [37.81, -122.41], [37.823, -122.435], [37.8338, -122.4525]],
+    stops: [[37.7955, -122.3937, 'Ferry Building'], [37.823, -122.435, 'Alcatraz (passing)'], [37.8338, -122.4525, 'Sausalito · beyond the fog']],
   },
   {
     id: 'ferryOak', system: 'ferry', name: 'Oakland Ferry', speed: 1.6, vehicles: 2,
-    match: (t) => t.route === 'ferry' && /Oakland|Alameda/i.test(t.name || ''),
-    hand: [[37.7955, -122.3937], [37.798, -122.37], [37.8, -122.35], [37.7985, -122.32], [37.798, -122.285]],
-    stops: [[37.7955, -122.3937, 'Ferry Building'], [37.798, -122.285, 'Oakland']],
+    match: () => false,
+    hand: [[37.7955, -122.3937], [37.798, -122.37], [37.7995, -122.3445]],
+    stops: [[37.7955, -122.3937, 'Ferry Building'], [37.7995, -122.3445, 'Oakland · into the clouds']],
   },
 ];
 

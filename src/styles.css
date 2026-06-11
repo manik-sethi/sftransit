@@ -76,8 +76,56 @@ body {
   }
 }
 
-.legend {
+.search {
   top: 92px;
+  left: 16px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.search input {
+  border: 2px solid #ddc9a6;
+  background: #fffaf0;
+  color: #6b5841;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  width: 180px;
+  outline: none;
+}
+
+.search input:focus {
+  border-color: #b48a6a;
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.search-row .mode-btn {
+  margin-left: 0;
+}
+
+.search-count {
+  font-size: 11.5px;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.app.night .search input {
+  background: #2f2c40;
+  border-color: #565070;
+  color: #e8e2d0;
+}
+
+.legend {
+  top: 158px;
   left: 16px;
   display: flex;
   flex-direction: column;

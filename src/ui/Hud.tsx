@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { SYSTEMS } from '../geo/systems';
-import { infoOf, VehicleInfo } from '../sim/transit';
-import { liveInfoOf, liveStatus, LiveInfo } from '../sim/live';
-import { useApp } from '../sim/store';
+import * as THREE from 'three';
+import { SYSTEMS, SystemId } from '../geo/systems';
+import { infoOf, poseCar, vehicles, VehicleInfo } from '../sim/transit';
+import { liveInfoOf, liveStatus, liveVehicles, LiveInfo } from '../sim/live';
+import { lineRefOfRoute } from '../geo/colors';
+import { useApp, queryTokens, matchesQuery } from '../sim/store';
 import { getViewPresets } from './views';
 
 const sysMeta = Object.fromEntries(SYSTEMS.map((s) => [s.id, s]));
@@ -56,6 +58,89 @@ function Views() {
           {p.label}
         </button>
       ))}
+    </div>
+  );
+}
+
+function matchPositions(tokens: string[], mode: 'live' | 'demo'): [number, number][] {
+  const out: [number, number][] = [];
+  if (mode === 'live') {
+    for (const v of liveVehicles.values()) {
+      if (matchesQuery(tokens, v.line)) out.push([v.x, v.z]);
+    }
+  } else {
+    const pos = new THREE.Vector3();
+    const quat = new THREE.Quaternion();
+    for (const v of vehicles) {
+      if (matchesQuery(tokens, lineRefOfRoute(v.route.def.id, v.route.def.system as SystemId))) {
+        poseCar(v, 0, 0, pos, quat);
+        out.push([pos.x, pos.z]);
+      }
+    }
+  }
+  return out;
+}
+
+function LineSearch() {
+  const lineQuery = useApp((s) => s.lineQuery);
+  const setLineQuery = useApp((s) => s.setLineQuery);
+  const setFlyTo = useApp((s) => s.setFlyTo);
+  const mode = useApp((s) => s.mode);
+  const [count, setCount] = useState<number | null>(null);
+
+  const tokens = useMemo(() => queryTokens(lineQuery), [lineQuery]);
+
+  useEffect(() => {
+    if (!tokens.length) {
+      setCount(null);
+      return;
+    }
+    const update = () => setCount(matchPositions(tokens, mode).length);
+    update();
+    const t = setInterval(update, 2000);
+    return () => clearInterval(t);
+  }, [tokens, mode]);
+
+  const flyToMatches = () => {
+    const pts = matchPositions(tokens, mode);
+    if (!pts.length) return;
+    let cx = 0;
+    let cz = 0;
+    for (const [x, z] of pts) {
+      cx += x;
+      cz += z;
+    }
+    cx /= pts.length;
+    cz /= pts.length;
+    // distance scaled to the spread of the matches
+    let r = 12;
+    for (const [x, z] of pts) r = Math.max(r, Math.hypot(x - cx, z - cz) * 1.3);
+    const dist = Math.min(160, r + 14);
+    setFlyTo({ pos: [cx + dist * 0.55, dist * 0.85, cz + dist * 0.55], target: [cx, 0, cz] });
+  };
+
+  return (
+    <div className="panel search">
+      <input
+        type="text"
+        value={lineQuery}
+        onChange={(e) => setLineQuery(e.target.value)}
+        placeholder="find lines… e.g. 48, 24"
+        spellCheck={false}
+      />
+      {tokens.length > 0 && (
+        <div className="search-row">
+          <span className="search-count">
+            {count === null ? '…' : `${count} vehicle${count === 1 ? '' : 's'}`}
+          </span>
+          <button className="mode-btn" onClick={flyToMatches} disabled={!count}>
+            fly to them
+          </button>
+          <button className="mode-btn" onClick={() => setLineQuery('')}>
+            clear
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -190,6 +275,7 @@ export function Hud() {
         <LiveStatusLine />
       </div>
       <Clock />
+      <LineSearch />
       <Legend />
       <Views />
       <InfoCard />

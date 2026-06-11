@@ -18,6 +18,18 @@ const CLASSES = [
   { key: 'minor' as const, width: 0.26, color: '#e9dcbc', night: NIGHT.roadMinor, overWater: 0.4 },
 ];
 
+// neighborhood max keeps ribbons on top of the flat-shaded terrain
+// triangles, which can peak above the bilinear height between samples
+function groundMax(x: number, z: number): number {
+  return Math.max(
+    world.sceneH(x, z),
+    world.sceneH(x + 0.7, z),
+    world.sceneH(x - 0.7, z),
+    world.sceneH(x, z + 0.7),
+    world.sceneH(x, z - 0.7),
+  );
+}
+
 function buildRibbons(lines: [number, number][][], width: number, overWaterY: number): THREE.BufferGeometry {
   const positions: number[] = [];
   const indices: number[] = [];
@@ -25,7 +37,7 @@ function buildRibbons(lines: [number, number][][], width: number, overWaterY: nu
   for (const line of lines) {
     if (line.length < 2) continue;
     // heights: drape on land, lift across water (bridges / piers)
-    const ys = line.map(([x, z]) => (world.isWater(x, z) ? NaN : world.sceneH(x, z) + ROAD_LIFT));
+    const ys = line.map(([x, z]) => (world.isWater(x, z) ? NaN : groundMax(x, z) + ROAD_LIFT));
     for (let i = 0; i < ys.length; i++) {
       if (Number.isNaN(ys[i])) {
         let a = NaN;
@@ -36,8 +48,9 @@ function buildRibbons(lines: [number, number][][], width: number, overWaterY: nu
         ys[i] = Math.max(base, overWaterY);
       }
     }
-    for (let pass = 0; pass < 2; pass++) {
-      for (let j = 1; j < ys.length - 1; j++) ys[j] = (ys[j - 1] + ys[j] * 2 + ys[j + 1]) / 4;
+    // one gentle smoothing pass; never below the terrain-max drape
+    for (let j = 1; j < ys.length - 1; j++) {
+      ys[j] = Math.max((ys[j - 1] + ys[j] * 2 + ys[j + 1]) / 4, ys[j] - 0.04);
     }
     const base = positions.length / 3;
     for (let i = 0; i < line.length; i++) {

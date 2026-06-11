@@ -2,28 +2,25 @@ import { useMemo } from 'react';
 import * as THREE from 'three';
 import { Line } from '@react-three/drei';
 import { routeRuntimes, RouteRuntime } from '../sim/transit';
-import { SYSTEMS } from '../geo/systems';
-import { useApp } from '../sim/store';
+import { routeColor, lineRefOfRoute } from '../geo/colors';
+import { useApp, queryTokens, matchesQuery } from '../sim/store';
 import { PAL } from '../palette';
 
-const sysColor = Object.fromEntries(SYSTEMS.map((s) => [s.id, s.color]));
-
-function SurfaceRoute({ rt }: { rt: RouteRuntime }) {
+function SurfaceRoute({ rt, spotlight, dimmed }: { rt: RouteRuntime; spotlight: boolean; dimmed: boolean }) {
   const pts = useMemo(() => {
     const n = Math.min(800, rt.points.length * 2);
-    return rt.curve.getSpacedPoints(n).map((p) => p.clone().setY(p.y + 0.12));
+    return rt.curve.getSpacedPoints(n).map((p) => p.clone().setY(p.y + 0.06));
   }, [rt]);
-  // with the full bus network on screen, bus lines stay subtle; rail pops
-  const bus = rt.def.system === 'bus';
-  return (
-    <Line
-      points={pts}
-      color={sysColor[rt.def.system]}
-      lineWidth={bus ? 1.8 : 3.5}
-      transparent={bus}
-      opacity={bus ? 0.55 : 1}
-    />
+  const color = useMemo(
+    () => routeColor(rt.def.system, lineRefOfRoute(rt.def.id, rt.def.system)),
+    [rt],
   );
+  // with the full bus network on screen, bus lines stay subtle; rail pops.
+  // a searched line gets the spotlight; everything else fades back.
+  const bus = rt.def.system === 'bus';
+  const width = spotlight ? 5 : bus ? 1.8 : 3.5;
+  const opacity = dimmed ? 0.08 : spotlight ? 1 : bus ? 0.55 : 1;
+  return <Line points={pts} color={color} lineWidth={width} transparent={opacity < 1} opacity={opacity} />;
 }
 
 function BartTube({ rt }: { rt: RouteRuntime }) {
@@ -42,13 +39,23 @@ function FerryLine({ rt }: { rt: RouteRuntime }) {
 
 export function RoutesLayer() {
   const visible = useApp((s) => s.visible);
+  const lineQuery = useApp((s) => s.lineQuery);
+  const tokens = useMemo(() => queryTokens(lineQuery), [lineQuery]);
   return (
     <group>
       {routeRuntimes.map((rt) => {
         if (!visible[rt.def.system]) return null;
         if (rt.def.system === 'bart') return <BartTube key={rt.def.id} rt={rt} />;
         if (rt.def.system === 'ferry') return <FerryLine key={rt.def.id} rt={rt} />;
-        return <SurfaceRoute key={rt.def.id} rt={rt} />;
+        const match = matchesQuery(tokens, lineRefOfRoute(rt.def.id, rt.def.system));
+        return (
+          <SurfaceRoute
+            key={rt.def.id}
+            rt={rt}
+            spotlight={tokens.length > 0 && match}
+            dimmed={tokens.length > 0 && !match}
+          />
+        );
       })}
     </group>
   );

@@ -4,7 +4,8 @@ import { useFrame } from '@react-three/fiber';
 import { RoundedBox } from '@react-three/drei';
 import { advance, poseCar, vehicles, VehicleSim } from '../sim/transit';
 import { SystemId, SYSTEMS } from '../geo/systems';
-import { useApp } from '../sim/store';
+import { lineRefOfRoute } from '../geo/colors';
+import { useApp, queryTokens, matchesQuery } from '../sim/store';
 import { PAL } from '../palette';
 
 // Vehicles are deliberately oversized for the real-scale map (like markers
@@ -243,10 +244,18 @@ export function Vehicles() {
     }
   });
 
+  const lineQuery = useApp((s) => s.lineQuery);
+  const tokens = queryTokens(lineQuery);
+
   return (
     <group>
       {vehicles
         .filter((v) => visible[v.route.def.system])
+        .filter(
+          (v) =>
+            !tokens.length ||
+            matchesQuery(tokens, lineRefOfRoute(v.route.def.id, v.route.def.system as SystemId)),
+        )
         .map((v) => (
           <VehicleObject key={v.id} v={v} refs={refs} followed={followedId === v.id} />
         ))}

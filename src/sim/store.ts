@@ -17,6 +17,25 @@ interface AppState {
   toggleNight: () => void;
   mode: 'live' | 'demo';
   setMode: (mode: 'live' | 'demo') => void;
+  /** comma/space-separated line refs to spotlight, e.g. "48, 24" */
+  lineQuery: string;
+  setLineQuery: (q: string) => void;
+}
+
+/** parse "48, 24" -> ['48','24'] (uppercased) */
+export function queryTokens(q: string): string[] {
+  return q
+    .split(/[\s,]+/)
+    .map((t) => t.trim().toUpperCase())
+    .filter(Boolean);
+}
+
+/** does a line ref match the active query? empty query matches everything */
+export function matchesQuery(tokens: string[], lineRef: string | null | undefined): boolean {
+  if (!tokens.length) return true;
+  if (!lineRef) return false;
+  const ref = lineRef.toUpperCase();
+  return tokens.some((t) => ref === t || ref === `${t}R`);
 }
 
 export const useApp = create<AppState>((set) => ({
@@ -33,4 +52,6 @@ export const useApp = create<AppState>((set) => ({
   // 'live' = real 511.org feed via our proxy; 'demo' = the dummy simulator
   mode: 'live' as 'live' | 'demo',
   setMode: (mode: 'live' | 'demo') => set({ mode, followedId: null }),
+  lineQuery: '',
+  setLineQuery: (lineQuery) => set({ lineQuery }),
 }));

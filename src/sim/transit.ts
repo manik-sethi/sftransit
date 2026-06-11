@@ -6,13 +6,15 @@ import { SYSTEMS } from '../geo/systems';
 // (VehicleInfo / poses keyed by vehicle id) is shaped like a GTFS-realtime
 // VehiclePosition feed so a real 511.org feed can be swapped in later.
 
-const SURFACE_LIFT = 0.3;
+// path sits just above the road ribbon (ROAD_LIFT 0.16); the small vehicle
+// lift puts wheel bottoms on the road surface instead of hovering
+const SURFACE_LIFT = 0.2;
 const BRIDGE_DECK_Y = 2.6;
 const VEHICLE_LIFT: Record<SystemId, number> = {
-  bus: 0.34,
-  metro: 0.32,
-  streetcar: 0.33,
-  cable: 0.32,
+  bus: 0.08,
+  metro: 0.06,
+  streetcar: 0.07,
+  cable: 0.06,
   bart: 0,
   ferry: 0,
 };

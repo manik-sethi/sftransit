@@ -13,7 +13,7 @@ export const AGENCY_TTL = {
 };
 
 // generous bounds around the rendered map; drops far-away vehicles
-const BOUNDS = { latMin: 37.6, latMax: 38.0, lonMin: -122.7, lonMax: -122.1 };
+const BOUNDS = { latMin: 37.69, latMax: 37.85, lonMin: -122.53, lonMax: -122.33 };
 
 export function readToken(env) {
   return env.TRANSIT_511_TOKEN || env['511_TOKEN'] || '';

@@ -65,7 +65,7 @@ function vehicleY(v: { system: SystemId; x: number; z: number }): number {
     world.sceneH(v.x, v.z + 0.7),
     world.sceneH(v.x, v.z - 0.7),
   );
-  return g + 0.62;
+  return g + 0.22; // just above the road ribbon
 }
 
 async function poll(agency: string): Promise<void> {

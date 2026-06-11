@@ -48,11 +48,12 @@ export default function App() {
       <Canvas
         shadows
         dpr={[1, 1.75]}
-        camera={{ position: [70, 90, 130], fov: 42, near: 0.5, far: 1500 }}
+        camera={{ position: [90, 85, 130], fov: 42, near: 0.5, far: 1100 }}
         onPointerMissed={() => setFollowed(null)}
       >
         <color attach="background" args={[sky]} />
-        <fog attach="fog" args={[sky, 420, 1200]} />
+        {/* tighter fog: the city fades into haze before the map edge */}
+        <fog attach="fog" args={[sky, 230, 620]} />
         <ambientLight
           intensity={night ? NIGHT.ambient.intensity : 0.85}
           color={night ? NIGHT.ambient.color : '#fff3e0'}
@@ -86,7 +87,7 @@ export default function App() {
           dampingFactor={0.08}
           maxPolarAngle={1.45}
           minDistance={4}
-          maxDistance={480}
+          maxDistance={330}
         />
         <CameraRig />
       </Canvas>
